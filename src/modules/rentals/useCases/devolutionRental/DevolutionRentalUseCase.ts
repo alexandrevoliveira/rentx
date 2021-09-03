@@ -1,16 +1,17 @@
 import { ICarsRepository } from "@modules/cars/repositories/ICarsRepository";
 import { Rental } from "@modules/rentals/infra/typeorm/entities/Rental";
 import { IRentalsRepository } from "@modules/rentals/repositories/IRentalsRepository";
-import { inject } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 
 import { IDateProvider } from "@shared/container/providers/DateProvider/IDateProvider";
 import { AppError } from "@shared/errors/AppError";
 
 interface IRequest {
   id: string;
-  car_id: string;
+  user_id: string;
 }
 
+@injectable()
 class DevolutionRentalUseCase {
   constructor(
     @inject("RentalsRepository")
@@ -20,9 +21,9 @@ class DevolutionRentalUseCase {
     @inject("DayjsDateProvider")
     private dateProvider: IDateProvider
   ) {}
-  async execute({ id, car_id }: IRequest): Promise<Rental> {
+  async execute({ id, user_id }: IRequest): Promise<Rental> {
     const rental = await this.rentalsRepository.findById(id);
-    const car = await this.carsRepository.findById(car_id);
+    const car = await this.carsRepository.findById(rental.car_id);
     const minimum_daily = 1;
 
     if (!rental) {
@@ -31,15 +32,18 @@ class DevolutionRentalUseCase {
 
     const dateNow = this.dateProvider.dateNow();
 
-    let daily = this.dateProvider.compareInDays(rental.start_date, dateNow);
+    let daily = this.dateProvider.compareInDays(
+      rental.start_date,
+      this.dateProvider.dateNow()
+    );
 
     if (daily <= 0) {
       daily = minimum_daily;
     }
 
     const delay = this.dateProvider.compareInDays(
-      dateNow,
-      rental.expected_return_date
+      rental.expected_return_date,
+      dateNow
     );
 
     let total = 0;
@@ -51,11 +55,11 @@ class DevolutionRentalUseCase {
 
     total += daily * car.daily_rate;
 
-    rental.end_date = dateNow;
+    rental.end_date = this.dateProvider.dateNow();
     rental.total = total;
 
     await this.rentalsRepository.create(rental);
-    await this.carsRepository.updateAvailable(car_id, true);
+    await this.carsRepository.updateAvailable(car.id, true);
 
     return rental;
   }
