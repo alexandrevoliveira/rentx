@@ -62,6 +62,7 @@ Não deve ser possível cadastrar um aluguel caso já exista um aberto para o me
 O usuário deve estar logado na aplicação
 
 # Devolução de carros
+
 **RF**
 Deve ser possível realizar a devolução de um carro
 
@@ -73,3 +74,11 @@ Ao realizar a devolução, deverá  ser calculado o total do aluguel.
 Caso o horário de devolução seja superior ao horário previsto de entrega, deverá ser cobrado
 multa proporcional aos dias de atraso.
 Caso haja multa, deverá ser somado ao total do aluguel.
+
+# Listagem de Alugueis para usuário
+
+**RF**
+Deve ser possível realizar a busca de todos os alugueis para o usuário
+
+**RN**
+O usuário deve estar logado na aplicação
